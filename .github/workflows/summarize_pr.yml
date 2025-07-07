@@ -2,9 +2,7 @@ name: PR Summary
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [opened, synchronize]
 
 permissions:
   pull-requests: write
@@ -13,7 +11,6 @@ permissions:
 jobs:
   summarize:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -24,15 +21,21 @@ jobs:
           git fetch origin ${{ github.base_ref }}
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
 
-      - name: Summarize PR
-        uses: google-gemini/gemini-cli-action@main
-        with:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を要約してください。出力はプレーンテキスト形式で、変更点の概要を簡潔に述べてください。要点がまとめられたら、PRにコメントしてください"
+      - name: Install Gemini CLI
+        run: npm install -g @google/gemini-cli
 
-      # - name: Post summary as comment
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      #   run: |
-      #     BODY=$(cat pr_summary.txt)
-      #     gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
+      - name: Summarize PR with Gemini CLI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          gemini --model=gemini-1.5-flash \
+            --input pr_diff.txt \
+            --prompt "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を要約してください。出力はプレーンテキスト形式で、変更点の概要を簡潔に述べてください。コメント以外のことはしないでください。" \
+            | tee pr_summary.txt
+
+      - name: Post summary as PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(cat pr_summary.txt)
+          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
