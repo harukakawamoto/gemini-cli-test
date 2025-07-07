@@ -4,9 +4,11 @@ on:
     types:
       - opened
       - synchronize
+
 permissions:
   pull-requests: write
   contents: read
+
 jobs:
   summarize:
     runs-on: ubuntu-latest
@@ -17,4 +19,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "このブランチの作業内容をただ要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
+          prompt: "${{ guthub.ref_name }}のFile Change部分をただ要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
