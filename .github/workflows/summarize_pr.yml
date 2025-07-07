@@ -17,4 +17,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "${{ github.ref_name }}のFile Change部分をただ要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
+          output_file: pr_summary.txt
+          prompt: "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を要約してください。出力はプレーンテキスト形式で、変更点の概要を簡潔に述べてください。コメント以外のことはしないでください"
+      - name: post summary as comment
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          BODY=$(cat pr_summary.txt)
+          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
