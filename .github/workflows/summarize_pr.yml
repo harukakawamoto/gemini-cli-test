@@ -1,32 +1,59 @@
-name: PR Summary
+name: PR Diff Summary
+
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-
-permissions:
-  pull-requests: write
-  contents: read
+    types: [opened, reopened, synchronize]
 
 jobs:
-  summarize:
+  summarize-pr-diff:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      pull-requests: write
+      contents: read
+      id-token: write
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Gemini CLI
-        run: npm install 0g @google/gemini-cli
-      - name: Generate PR Summary
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          fetch-depth: 0 # 差分のため履歴が必要
+
+      - name: Get PR Diff
+        id: get_diff
         run: |
-          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
-          SUMMARY=$(cat diff.txt | gemini summarize --yolo --prompt "${{ github.ref_name }}のFile Change部分をただ要約してgh pr commentで要約コメントを追加してほしい")
-          echo "$SUMMARY" > summary.txt
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+
+      - name: Summarize Diff using Gemini
+        id: summarize
+        uses: google-gemini/gemini-cli-action@main
         env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+        with:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      - name: install github cli
-        run: sudo apt-get update && sudo apt-get install -y gh
-      - name: comment summary on PR
+          input_file: pr_diff.txt
+          output_file: pr_summary.txt
+          prompt: |
+            You are a code review assistant. Your task is to summarize the changes in this pull request.
+            Please produce a concise and developer-friendly summary of the diff.
+            Focus on:
+            - What was changed
+            - Why it was changed (if apparent)
+            - Key impacted components
+
+      - name: Post Summary as Comment
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body-file summary.txt
+          COMMENT_BODY=$(cat pr_summary.txt)
+          gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_BODY"
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
