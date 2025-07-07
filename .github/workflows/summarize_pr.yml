@@ -14,4 +14,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "gitのmainブランチとの差分を見て今回修正分を要約してPRにコメントしてほしい"
+          prompt: "gitのmainブランチとの差分を見て今回修正分を要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
