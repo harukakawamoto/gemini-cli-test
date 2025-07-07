@@ -18,8 +18,7 @@ jobs:
         run: npm install 0g @google/gemini-cli
       - name: Generate PR Summary
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > diff.txt
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
           SUMMARY=$(cat diff.txt | gemini summarize --yolo --prompt "${{ github.ref_name }}のFile Change部分をただ要約してgh pr commentで要約コメントを追加してほしい")
           echo "$SUMMARY" > summary.txt
         env:
