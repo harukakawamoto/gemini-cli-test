@@ -14,4 +14,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "このブランチで追加したコードの要約を行いPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
+          prompt: "このブランチの作業内容をただ要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
