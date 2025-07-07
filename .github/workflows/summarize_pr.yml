@@ -21,4 +21,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          prompt: "${{ github.ref_name }}のFile Change部分をただ要約してPRにコメントしてほしい。PRの番号は${{ github.event.pull_request.number }}です。"
+          prompt: "${{ github.ref_name }}のFile Change部分をただ要約してPull Requestにコメントを追加してほしい。PRの番号は${{ github.event.pull_request.number }}です。"
