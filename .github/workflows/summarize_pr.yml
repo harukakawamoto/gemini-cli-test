@@ -1,25 +1,36 @@
 name: PR Summary
+
 on:
   pull_request:
     types:
       - opened
       - synchronize
+
 permissions:
   pull-requests: write
   contents: read
+
 jobs:
   summarize:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
+      - name: Generate diff file
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+
       - name: Summarize PR
         uses: google-gemini/gemini-cli-action@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          input_file: pr_diff.txt
           output_file: pr_summary.txt
           prompt: "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を要約してください。出力はプレーンテキスト形式で、変更点の概要を簡潔に述べてください。コメント以外のことはしないでください"
-      - name: post summary as comment
+
+      - name: Post summary as comment
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
