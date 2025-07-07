@@ -10,7 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Summarize PR
-        uses: google-gemini/gemini-cli-actions@v1
+        uses: google-gemini/gemini-cli-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          command: "git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | gemini summarize"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          prompt: "gitの差分を見て今回の変更を要約して"
