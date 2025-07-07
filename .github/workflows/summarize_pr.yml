@@ -30,7 +30,7 @@ jobs:
         run: |
           cat pr_diff.txt | gemini \
             --model=gemini-1.5-flash \
-            --prompt "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を日本語で要約してください。出力はプレーンテキスト形式で、変更点の概要を簡潔に述べてください。コメント以外のことはしないでください。" \
+            --prompt "${{ github.ref_name }} の Pull Request に含まれる File Change 部分を日本語で要約してください。出力はマークダウン形式で、変更点の概要を簡潔に述べてください。コメント以外のことはしないでください。" \
             | tee pr_summary.txt
 
       - name: Post summary as PR comment
